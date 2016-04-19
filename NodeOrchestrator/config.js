@@ -24,12 +24,14 @@
 
 
 var config = {};
+config.serviceregistry = {};
+config.listen = {};
 
-config.serviceregistry.ip		= "127.0.0.1";
+config.serviceregistry.ip		= "[FDFD:55::80FF]";
 config.serviceregistry.port		= "1100";
 
-config.listen.ip				= "127.0.0.1";
-congif.listen.port				= "1102";
+config.listen.ip				= "[FDFD:55::80FF]";
+config.listen.port				= "1102";
 
 
 module.exports = config;

@@ -57,18 +57,19 @@ if ('development' == app.get('env')) {
 //orchestrationstore service
 var request = require("request");
 request({
-uri: "http://" + config.listen.ip + ":" + config.listen.port + "/serviceregistry/publish",
-method: "POST",
-json: {
-		  "servicename" : "OrchestrationStore",
-		  "servicetype" : "_orchestrationstore._json._http",
-		  "serviceport" : config.listen.port,
-		  "servicehost" : config.listen.ip,
-		  "servicepath" : "/orchestrationstore/"
-}
-}, function(error, response, body) {
-	console.log(body);
-});
+		uri: "http://" + config.serviceregistry.ip + ":" + config.serviceregistry.port + "/servicediscovery/publish",
+		method: "POST",
+		json: {
+				  "name" : "OrchestrationStore",
+				  "type" : "_orchestrationstore-_json-_http._tcp",
+				  "port" : config.listen.port,
+				  "host" : config.listen.ip,
+				  "properties" : { "property" : [ { "name":"version", "value":"1.0" },
+				                                  { "name":"path", "value":"/orchestrationstore/" } ] }
+			}
+	}, function(error, response, body) {
+		console.log(body);
+	});
 
 //---------------------------------------------------------------------------
 //orchestrationstore routes CRUD
@@ -80,21 +81,23 @@ app.post('/orchestrationstore/configuration/delete', orchestrationstore.deleteEx
 //orchestrationengine service
 var request = require("request");
 request({
-uri: "http://127.0.0.1:1100/serviceregistry/publish",
-method: "POST",
-json: {
-		  "servicename" : "OrchestrationEngine",
-		  "servicetype" : "_orchestrationengine._json._http._tcp",
-		  "serviceport" : config.listen.port,
-		  "servicehost" : config.listen.ip,
-		  "servicepath" : "/orchestrationengine/"
-}
-}, function(error, response, body) {
-	console.log(body);
-});
+		uri: "http://" + config.serviceregistry.ip + ":" + config.serviceregistry.port + "/servicediscovery/publish",
+		method: "POST",
+		json: {
+				  "name" : "OrchestrationEngine",
+				  "type" : "_orchestrationengine-_json-_http._tcp",
+				  "port" : config.listen.port,
+				  "host" : config.listen.ip,
+				  "properties" : { "property" : [ { "name":"version", "value":"1.0" },
+				                                  { "name":"path", "value":"/orchestrationengine/" } ] }
+			}
+	}, function(error, response, body) {
+		console.log(body);
+	});
 
 //---------------------------------------------------------------------------
-app.get('/orchestrationengine/*', orchestrationengine.lookupOrchestrationStore, orchestrationengine.lookupServiceRegistry, orchestrationengine.matchServiceContract, orchestrationengine.sendResponse);
+//app.get('/orchestrationengine/*', orchestrationengine.lookupOrchestrationStore, orchestrationengine.lookupServiceRegistry, orchestrationengine.matchServiceContract, orchestrationengine.sendResponse);
+app.get('/orchestrationengine/:target', orchestrationengine.handleGet);
 
 
 

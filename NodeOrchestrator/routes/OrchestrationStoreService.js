@@ -23,7 +23,12 @@
 
 var taffy = require('taffydb').taffy;
 
-var inJSON=[ {id:'station-01', expression:"service1:palletAvailable._coap._json, service2:processingComplete._coap._json"}, ];
+//var inJSON=[ {id:'station-01', expression:"service1:palletAvailable._coap._json, service2:processingComplete._coap._json"}, ];
+var inJSON=[ {	target:'station-01',
+				name:'name-01',  
+				serialNumber:'serialNumber-01',  
+				lastUpdated:'lastUpdated-01', 
+				rules:["palletAvailable", "processingComplete" ] } ];
 
 var db = new taffy(inJSON);
 
@@ -70,8 +75,8 @@ exports.usage =  function(req, res){
 exports.getExpression = function(req, res){
 	res.setHeader('Content-Type','application/json');
 	var responsePayload = null;
-	if(target) {
-		responsePayload = db().filter({target:{like:target}}).get();
+	if(req.params.target) {
+		responsePayload = db().filter({target:{like:req.params.target}}).get();
 	} else {
 		responsePayload = "ERROR: Target not specified"//TODO:set error code
 		res.status(400);

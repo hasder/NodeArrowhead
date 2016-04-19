@@ -53,12 +53,12 @@ if ('development' == app.get('env')) {
 //---------------------------------------------------------------------------
 //Service Registry routes
 //serviceregistry.init();
-app.get('/serviceregistry/service', serviceregistry.service);
-app.get('/serviceregistry/service/:name', serviceregistry.service);
-app.get('/serviceregistry/type', serviceregistry.type);
-app.get('/serviceregistry/type/:type', serviceregistry.type);
-app.post('/serviceregistry/publish', serviceregistry.publish);
-app.post('/serviceregistry/unpublish', serviceregistry.unpublish);
+app.get('/servicediscovery/service', serviceregistry.service);
+app.get('/servicediscovery/service/:name', serviceregistry.service);
+app.get('/servicediscovery/type', serviceregistry.type);
+app.get('/servicediscovery/type/:type', serviceregistry.type);
+app.post('/servicediscovery/publish', serviceregistry.publish);
+app.post('/servicediscovery/unpublish', serviceregistry.unpublish);
 
 http.createServer(app).listen(app.get('port'), function(){
   console.log('Express server listening on port ' + app.get('port'));
@@ -84,20 +84,20 @@ server.on('request', function(req, res) {
 	console.log('received request req:' + req.method + " payload     " + req.payload);
 	
 	var usage_err = null;
-
-	if(req.url.split('/')[1] === "servicediscovery") {
+	var urlsegments = req.url.split('/');
+	if(urlsegments[1] === "servicediscovery") {
 		if(req.method === "GET") {
-			if (req.url.split('/')[2] 			=== "service") {
+			if (urlsegments[2] 			=== "service") {
 				serviceregistry.service_coap(req, res);
-			} else if (req.url.split('/')[2] 	=== "type") {
+			} else if (urlsegments[2] 	=== "type") {
 				serviceregistry.type_coap(req, res);
 			} else {
 				usage_err = true;
 			}
 		} else if (req.method === "POST") {
-			if (req.url.split('/')[2] 			=== "publish") {
+			if (urlsegments[2] 			=== "publish") {
 				serviceregistry.publish_coap(req, res);
-			} else if (req.url.split('/')[2] 	=== "unpublish") {
+			} else if (urlsegments[2] 	=== "unpublish") {
 				serviceregistry.unpublish_coap(req, res);
 			} else {
 				usage_err = true;
@@ -115,5 +115,6 @@ server.on('request', function(req, res) {
 });
 
 server.listen(5683, "FDFD:55::80FF", function() {
+//server.listen(5683, "127.0.0.1", function() {
   console.log('server started ' + server._port);
 });
