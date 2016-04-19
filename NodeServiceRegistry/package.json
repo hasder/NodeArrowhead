@@ -6,8 +6,9 @@
     "start": "node app.js"
   },
   "dependencies": {
+    "coap": "^0.15.0",
     "express": "3.2.6",
     "jade": "*",
-    "taffydb":"*"
+    "taffydb": "*"
   }
 }
