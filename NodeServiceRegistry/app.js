@@ -1,14 +1,36 @@
+/**
+ * Copyright (c) <2016> <hasder>
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 	
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ * 
+*/
 
 /**
  * Module dependencies.
  */
 
 var express = require('express')
-  , routes = require('./routes')
-  , user = require('./routes/user')
   , serviceregistry = require('./routes/serviceregistry')
   , http = require('http')
-  , path = require('path');
+  , path = require('path')
+  , coap = require('coap');
+  //, server_ipv6 = coap.createServer({ type:'udp6' });
 
 var app = express();
 
@@ -28,19 +50,70 @@ if ('development' == app.get('env')) {
   app.use(express.errorHandler());
 }
 
-app.get('/', routes.index);
-app.get('/users', user.list);
-
 //---------------------------------------------------------------------------
 //Service Registry routes
 //serviceregistry.init();
-app.get('/serviceregistry/service',serviceregistry.service);
-app.get('/serviceregistry/service/:name',serviceregistry.service);
-app.get('/serviceregistry/type',serviceregistry.type);
-app.get('/serviceregistry/type/:type',serviceregistry.type);
-app.post('/serviceregistry/publish',serviceregistry.publish);
-app.post('/serviceregistry/unpublish',serviceregistry.unpublish);
+app.get('/serviceregistry/service', serviceregistry.service);
+app.get('/serviceregistry/service/:name', serviceregistry.service);
+app.get('/serviceregistry/type', serviceregistry.type);
+app.get('/serviceregistry/type/:type', serviceregistry.type);
+app.post('/serviceregistry/publish', serviceregistry.publish);
+app.post('/serviceregistry/unpublish', serviceregistry.unpublish);
 
 http.createServer(app).listen(app.get('port'), function(){
   console.log('Express server listening on port ' + app.get('port'));
+});
+
+
+var server = coap.createServer();
+//server.on('get', function(req, res) {
+//	if(req.url.split('/')[1] === "servicedirectory") {
+//		if (req.url.split('/')[2] 			=== "service") {
+//			serviceregistry.service_coap(req, res);
+//		} else if (req.url.split('/')[2] 	=== "type") {
+//			serviceregistry.type_coap(req, res);
+//		} else {
+//			res.end('wrong usage');
+//		}
+//	} else {
+//		res.end('wrong usage');
+//	}
+//});
+
+server.on('request', function(req, res) {
+	console.log('received request req:' + req.method + " payload     " + req.payload);
+	
+	var usage_err = null;
+
+	if(req.url.split('/')[1] === "servicediscovery") {
+		if(req.method === "GET") {
+			if (req.url.split('/')[2] 			=== "service") {
+				serviceregistry.service_coap(req, res);
+			} else if (req.url.split('/')[2] 	=== "type") {
+				serviceregistry.type_coap(req, res);
+			} else {
+				usage_err = true;
+			}
+		} else if (req.method === "POST") {
+			if (req.url.split('/')[2] 			=== "publish") {
+				serviceregistry.publish_coap(req, res);
+			} else if (req.url.split('/')[2] 	=== "unpublish") {
+				serviceregistry.unpublish_coap(req, res);
+			} else {
+				usage_err = true;
+			}
+		} else {
+			usage_err = true;
+		}
+	}  else {
+		usage_err = true;
+	}
+	
+	if(usage_err) {
+		res.end('wrong usage');
+	}
+});
+
+server.listen(5683, "FDFD:55::80FF", function() {
+  console.log('server started ' + server._port);
 });

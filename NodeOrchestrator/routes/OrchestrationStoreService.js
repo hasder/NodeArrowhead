@@ -1,23 +1,42 @@
+/**
+ * Copyright (c) <2016> <hasder>
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 	
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ * 
+*/
+
 var taffy = require('taffydb').taffy;
 
 var inJSON=[ {id:'station-01', expression:"service1:palletAvailable._coap._json, service2:processingComplete._coap._json"}, ];
 
-// Load the Taffy object
-//var taffy = require('taffydb4ti').taffy;
+var db = new taffy(inJSON);
 
-// Create an instance, give it a name and the JSON to start with
-//var my_db = new taffy('phonesdb',{autocommit:true},inJSON);
-//my_db.save(); // because it is new
 
-// returns an array with all rows
-//var recordSet=my_db().get();
 
-//recordSet.forEach(function(rec){
-    // inside this loop you have access to
-// rec.model
-// rec.version
-// rec.os
-//})
+function orchestrationrecord ( target, name, serialNumber, lastUpdated, rules )  {
+	this.target = target;
+	this.name = name;
+	this.serialNumber = serialNumber;
+	this.lastUpdated = lastUpdated;
+	this.rules = rules;
+}
+
 
 /*
  * Orhestration Store Service Provides the CRUD for storing Orchestration Expressions
@@ -45,28 +64,77 @@ exports.usage =  function(req, res){
 	res.send(usage);
 };
 
+/*
+ * GET Orchestration list.
+ */
+exports.getExpression = function(req, res){
+	res.setHeader('Content-Type','application/json');
+	var responsePayload = null;
+	if(target) {
+		responsePayload = db().filter({target:{like:target}}).get();
+	} else {
+		responsePayload = "ERROR: Target not specified"//TODO:set error code
+		res.status(400);
+	}
+
+	res.send(responsePayload);
+};
+
+
+
+
+/*
+ * POST publish new orchestration
+ */
 exports.postExpression = function(req, res){
-	var newExpression = new expression(req.body.id, req.body.expression);
-	//db.push(newExpression);
+	
 	res.send("created/updated orchestration expression record");
 };
-//console.log(req.body);      // your JSON
-//res.send(req.body);    // echo the result back
+exports.publish = function(req, res){
+	try {
+		if(req.body.target) {
+			db({name:req.body.target}).remove();
+			
+			db.insert(new orchestrationrecord(
+							req.body.target, 
+							req.body.name, 
+							req.body.serialNumber, 
+							req.body.lastUpdated, 
+							req.body.rules ));
+			
+			res.send("ok");
 
-//exports.deleteExpression = function(req, res){
-//	res.send("deleted orchestration expression record");
-//};
+		} else {
+			throw new Error("target system not provided");
+		}
+	} catch (e) {
+		console.log('exception when parsing body');
+		res.status(400);
+		res.send();
+	}
+	
+};
 
-exports.getExpression = function(req, res){
-	var url = require('url').parse(req.url, true);
-	//if (url.id == "all") {
-//	res.send(db.filter(function(el)
-//			{
-//				if(el.id == url.query.id)
-//					return el;
-//			}));
-		//res.send(db)
-	//}
-	res.send(db().filter({ id : req.params.systemid}).get());
-	//res.send("id:00012,function:rpm,gps:19282-243112,height:1.8m");
+
+
+
+/*
+ * POST delete an orchestration
+ */
+exports.deleteExpression = function(req,res){
+	try {
+		if(req.body.target) {
+			db({name:req.body.target}).remove();
+
+			res.send("ok");
+
+		} else {
+			throw new Error("target system not provided");
+		}
+	} catch (e) {
+		console.log('exception when parsing body');
+		res.status(400);
+		res.send();
+	}
+	
 };
