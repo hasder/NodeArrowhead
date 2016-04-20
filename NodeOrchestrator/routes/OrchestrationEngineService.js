@@ -25,87 +25,47 @@
 var reqprom = require("request-promise");
 
 
+
 exports.handleGet = function(req, res){
 
-	var serviceNameList = [];
-	var i = 0;
+	var targetSys = req.params.target;
 	var serviceList = [];
 	
-	var getOrchestrationRules = {
-			uri: 'http://127.0.0.1:1102/orchestrationstore/configuration/' + req.params.target,
+	var getOrchestrationRules_options = {
+			uri: 'http://127.0.0.1:1102/orchestrationstore/configuration/' + targetSys,
 		    json: true // Automatically parses the JSON string in the response
 	}
 
 	
-	reqprom(getOrchestrationRules)
-		.then(getServiceListRecursive)
-		.then(createResponse)
-		.catch(function (err) {
-			console.log(err);
+	reqprom(getOrchestrationRules_options)
+		.then(function(response) {
+
+			console.log("response[0].rules: " + response[0].rules);
+			return response[0].rules;
+		})
+		.map(function(serviceName) {
+
+			console.log("serviceName: " + serviceName);
+			var getService_options = {
+					uri: 'http://127.0.0.1:1100/servicediscovery/service/' + serviceName,
+				    json: true // Automatically parses the JSON string in the response
+			}
+			return reqprom(getService_options)
+					.then(function(service) {
+//						serviceList.push(service);
+						serviceList.push({"name":service[0].name, "address":service[0].host 
+																			+ ":" + service[0].port
+																			+ service[0].properties.property.filter(
+																					function(property)
+																					{ 
+																						return property.name == "path" ? true : false;
+																					})[0].value});
+					});
+		})
+		.finally(function() {
+			console.log({"target":targetSys, "services":serviceList});
+			res.setHeader('Content-Type','application/json');
+			res.send({"target":targetSys, "services":serviceList});
 		});
 };
 
-function getServiceListRecursive (repos) {
-	console.log(repos);
-	var sd_options = {
-			uri: 'http://127.0.0.1:1100/servicediscovery/service/' + repos[0].rules[0],
-		    json: true // Automatically parses the JSON string in the response
-	}
-	return reqprom(sd_options).then(function(repos) { console.log("emtpy"); return repos;});
-}
-
-function createResponse(repos) {
-	console.log(repos);
-	var oe_response = {};
-	oe_response.target='station-01';
-	oe_response.services= [];
-	oe_response.services.push({"name":repos[0].name, "address":repos[0].host+":"+repos[0].port+"/"+repos[0].properties.property[0]})
-	res.send(oe_response);
-	//res.send("id:00012,function:rpm,gps:19282-243112,height:1.8m");
-}
-
-//exports.lookupOrchestrationStore = function(req,res,next) {
-//	if(!req._orchestrationengine) {
-//		req._orchestrationengine = {};
-//	}
-//	
-//	request({
-//			uri: "http://" + "127.0.0.1" + ":" + "1102" + "/orchestrationstore/configuration/" + "station-01",
-//			method: "GET",
-//		}, function(error, response, body) {
-//			console.log(body);
-//		});
-//	
-//	req._orchestrationengine.criteria = "";
-//	next();
-//};
-//
-//exports.lookupServiceRegistry = function(req,res,next) {
-//	if(!req._orchestrationengine) {
-//		res.write("Error");
-//		res.end();
-//	} else {
-//		req._orchestrationengine.servicelist = "";
-//		next();
-//	}
-//};
-//
-//exports.matchServiceContract = function(req,res,next) {
-//	if(!req._orchestrationengine) {
-//		res.write("Error");
-//		res.end();
-//	} else {
-//		req._orchestrationengine.service = "bye";
-//		next();
-//	}
-//};
-//
-//exports.sendResponse = function(req,res,next) {
-//	if(!req._orchestrationengine) {
-//		res.write("Error");
-//		res.end();
-//	} else {
-//		res.write(req._orchestrationengine.service);
-//		res.end();
-//	}
-//};

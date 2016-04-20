@@ -27,10 +27,12 @@ var config = {};
 config.serviceregistry = {};
 config.listen = {};
 
-config.serviceregistry.ip		= "[FDFD:55::80FF]";
+//config.serviceregistry.ip		= "[FDFD:55::80FF]";
+config.serviceregistry.ip		= "127.0.0.1";
 config.serviceregistry.port		= "1100";
 
-config.listen.ip				= "[FDFD:55::80FF]";
+//config.listen.ip				= "[FDFD:55::80FF]";
+config.listen.ip				= "127.0.0.1";
 config.listen.port				= "1102";
 
 

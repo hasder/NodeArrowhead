@@ -6,7 +6,7 @@ var servicedb = [];
 
 
 
-function servicerecord ( name, type, port, host, domain, properties )  {
+function servicerecord ( name, type, host, port, domain, properties )  {
 	this.name = name;
 	this.type = type;
 	this.host = host;
@@ -16,7 +16,7 @@ function servicerecord ( name, type, port, host, domain, properties )  {
 }
 
 
-var inJSON = [new servicerecord("palletAvailable", "_coap-json._udp", "5683", "[fdfd::ff]", "unknown", {"property":[{"name":"version","value":"1.0"},{"name":"path","value":"/palletAvailable"}]})]
+var inJSON = [new servicerecord("palletAvailable", "_coap-json._udp", "[fdfd::ff]", "5683", "unknown", {"property":[{"name":"version","value":"1.0"},{"name":"path","value":"/palletAvailable"}]})]
 
 var db = new taffy(inJSON);
 
@@ -84,6 +84,7 @@ exports.publish = function(req, res){
 							req.body.type, 
 							req.body.host, 
 							req.body.port, 
+							req.body.domain,
 							req.body.properties ));
 			
 			res.send("ok");

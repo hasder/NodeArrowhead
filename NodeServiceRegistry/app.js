@@ -114,7 +114,7 @@ server.on('request', function(req, res) {
 	}
 });
 
-server.listen(5683, "FDFD:55::80FF", function() {
-//server.listen(5683, "127.0.0.1", function() {
+//server.listen(5683, "FDFD:55::80FF", function() {
+server.listen(5683, "127.0.0.1", function() {
   console.log('server started ' + server._port);
 });
