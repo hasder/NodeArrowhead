@@ -29,13 +29,14 @@ var express = require('express')
   , serviceregistry = require('./routes/serviceregistry')
   , http = require('http')
   , path = require('path')
-  , coap = require('coap');
+  , coap = require('coap')
+  , config = require('./config');
   //, server_ipv6 = coap.createServer({ type:'udp6' });
 
 var app = express();
 
 // all environments
-app.set('port', process.env.PORT || 1100);
+app.set('port', process.env.PORT || config.listen.http.port); //1100
 app.set('views', __dirname + '/views');
 app.set('view engine', 'jade');
 app.use(express.favicon());
@@ -115,6 +116,6 @@ server.on('request', function(req, res) {
 });
 
 //server.listen(5683, "FDFD:55::80FF", function() {
-server.listen(5683, "127.0.0.1", function() {
+server.listen(config.listen.coap.port, config.listen.coap.ip, function() {
   console.log('server started ' + server._port);
 });
