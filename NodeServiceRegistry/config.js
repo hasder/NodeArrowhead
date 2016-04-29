@@ -28,13 +28,13 @@ config.serviceregistry = {};
 config.listen = {};
 
 config.listen.http = {};
-config.listen.http.ip				= "[FDFD:55::80FF]";
-//config.listen.http.ip				= "127.0.0.1";
+//config.listen.http.ip				= "[FDFD:55::80FF]";
+config.listen.http.ip				= "127.0.0.1";
 config.listen.http.port				= "1100";
 
 config.listen.coap = {};
-config.listen.coap.ip				= "FDFD:55::80FF";
-//config.listen.coap.ip				= "127.0.0.1";
+//config.listen.coap.ip				= "FDFD:55::80FF";
+config.listen.coap.ip				= "127.0.0.1";
 config.listen.coap.port				= "9683";
 
 

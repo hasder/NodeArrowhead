@@ -70,28 +70,33 @@ exports.type_coap = function(req, res){
 	res.end(JSON.stringify(responsePayload));
 };
 
+var registerNewService = function (element) {
+	if(element.name) {
+		db({name:element.name}).remove();
+		
+		db.insert(new servicerecord(
+				element.name, 
+				element.type, 
+				element.host, 
+				element.port, 
+				element.domain,
+				element.properties ));
+		
+
+	} else throw new Error("service name not provided");
+}
 
 /*
  * POST publish new service
  */
 exports.publish = function(req, res){
 	try {
-		if(req.body.name) {
-			db({name:req.body.name}).remove();
-			
-			db.insert(new servicerecord(
-							req.body.name, 
-							req.body.type, 
-							req.body.host, 
-							req.body.port, 
-							req.body.domain,
-							req.body.properties ));
-			
-			res.send("ok");
+		req.body.forEach(registerNewService);
 
-		} else throw new Error("service name not provided");
-	} catch (e) {
-		console.log('exception when parsing body');
+		res.send("ok");
+		
+	} catch (error) {
+		console.log('exception when parsing body = ' + error);
 		res.code = '4.00';
 		res.end();
 	}
@@ -99,19 +104,22 @@ exports.publish = function(req, res){
 };
 exports.publish_coap = function(req, res){
 	try {
+
 		var payload = JSON.parse(req.payload);
-		if(payload.name) {
-			db({name:payload.name}).remove();
-			
-			db.insert(new servicerecord(
-						payload.name, 
-						payload.type, 
-						payload.host, 
-						payload.port, 
-						payload.properties ));
-			
-			res.end("ok");
-		} else throw new Error("service name not provided");
+		payload.forEach(registerNewService);
+		
+//		if(payload.name) {
+//			db({name:payload.name}).remove();
+//			
+//			db.insert(new servicerecord(
+//						payload.name, 
+//						payload.type, 
+//						payload.host, 
+//						payload.port, 
+//						payload.properties ));
+//			
+//			res.end("ok");
+//		} else throw new Error("service name not provided");
 	} catch (e) {
 		console.log('exception when parsing body');
 		res.code = '4.00';

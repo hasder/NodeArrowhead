@@ -45,7 +45,14 @@ app.use(express.favicon());
 app.use(express.logger('dev'));
 app.use(express.bodyParser());
 app.use(express.methodOverride());
+app.use(function(req, res, next) {
+	  res.header("Access-Control-Allow-Origin", "*");
+	  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+	  next();
+	});
 app.use(app.router);
+
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 // development only
@@ -59,14 +66,22 @@ var request = require("request");
 request({
 		uri: "http://" + config.serviceregistry.ip + ":" + config.serviceregistry.port + "/servicediscovery/publish",
 		method: "POST",
-		json: {
+		json: [{
 				  "name" : "OrchestrationStore",
 				  "type" : "_orchestrationstore-_json-_http._tcp",
 				  "port" : config.listen.port,
 				  "host" : config.listen.ip,
 				  "properties" : { "property" : [ { "name":"version", "value":"1.0" },
 				                                  { "name":"path", "value":"/orchestrationstore/" } ] }
-			}
+			},
+			{
+				  "name" : "OrchestrationEngine",
+				  "type" : "_orchestrationengine-_json-_http._tcp",
+				  "port" : config.listen.port,
+				  "host" : config.listen.ip,
+				  "properties" : { "property" : [ { "name":"version", "value":"1.0" },
+				                                  { "name":"path", "value":"/orchestrationengine/" } ] }
+			}]
 	}, function(error, response, body) {
 		console.log(body);
 	});
@@ -79,21 +94,21 @@ app.post('/orchestrationstore/configuration/delete', orchestrationstore.deleteEx
 
 
 //orchestrationengine service
-var request = require("request");
-request({
-		uri: "http://" + config.serviceregistry.ip + ":" + config.serviceregistry.port + "/servicediscovery/publish",
-		method: "POST",
-		json: {
-				  "name" : "OrchestrationEngine",
-				  "type" : "_orchestrationengine-_json-_http._tcp",
-				  "port" : config.listen.port,
-				  "host" : config.listen.ip,
-				  "properties" : { "property" : [ { "name":"version", "value":"1.0" },
-				                                  { "name":"path", "value":"/orchestrationengine/" } ] }
-			}
-	}, function(error, response, body) {
-		console.log(body);
-	});
+//var request = require("request");
+//request({
+//		uri: "http://" + config.serviceregistry.ip + ":" + config.serviceregistry.port + "/servicediscovery/publish",
+//		method: "POST",
+//		json: {
+//				  "name" : "OrchestrationEngine",
+//				  "type" : "_orchestrationengine-_json-_http._tcp",
+//				  "port" : config.listen.port,
+//				  "host" : config.listen.ip,
+//				  "properties" : { "property" : [ { "name":"version", "value":"1.0" },
+//				                                  { "name":"path", "value":"/orchestrationengine/" } ] }
+//			}
+//	}, function(error, response, body) {
+//		console.log(body);
+//	});
 
 //---------------------------------------------------------------------------
 //app.get('/orchestrationengine/*', orchestrationengine.lookupOrchestrationStore, orchestrationengine.lookupServiceRegistry, orchestrationengine.matchServiceContract, orchestrationengine.sendResponse);
