@@ -23,6 +23,7 @@
 
 
 var 	reqprom = require("request-promise")
+	,	config = require('../config')
 	,	xmldoc = require("xmldoc");
 
 
@@ -38,16 +39,18 @@ exports.handleGet = function(req, res){
 		
 	
 	var getOrchestrationRules_options = {
-			uri: 'http://127.0.0.1:1102/orchestrationstore/configuration/' + targetSys,
+			uri: 'http://' + config.listen.ip + ':1102/orchestrationstore/configuration/' + targetSys,
 		    json: true // Automatically parses the JSON string in the response
-	}
+	};
 
-	
+	//send request to Orchestration store to get the rules for the system
 	var waitfor = reqprom(getOrchestrationRules_options).then(function(response) {
-			console.log("response[0].rules: " + response[0].rules);
-			return response[0].rules;
-		});
+		console.log("response[0].rules: " + response[0].rules);
+		return response[0].rules;
+	});
 	
+	//concurrent sends to service registry to get the service instances according to the name in the rule
+	//todo: This will change once the rule definition becomes clear.
 	waitfor = waitfor.map(function(rule) {
 		
 		serviceName = rule.split(',')[0];
@@ -55,60 +58,64 @@ exports.handleGet = function(req, res){
 		
 		console.log("serviceName: " + serviceName);
 		var getService_options = {
-				uri: 'http://127.0.0.1:1100/servicediscovery/service/' + serviceName,
+				uri: 'http://' + config.serviceregistry.ip + ':' + config.serviceregistry.port + '/servicediscovery/service/' + serviceName,
 			    json: true // Automatically parses the JSON string in the response
 		};
 		return reqprom(getService_options);
-		//return "hello";
 	});
 	
-	waitfor = waitfor.then(function(service) {
-		if(service[0][0].type.toString() !== serviceType.toString()) {
+	//concurrent test for protocol mismatch and therefore translator engagement
+	waitfor = waitfor.map(function(service) {
+		if(service[0].type.toString() !== serviceType.toString()) {
+			//if the ip address does not contain a period and it does not have the square brackets for ipv6 then add them
+			if (service[0].host.indexOf('.') === -1 && service[0].host.indexOf('[') === -1) { 
+				service[0].host = '[' + service[0].host + ']';
+			}
+			
 			var xmlbody = 	'<translatorSetup>' + 
-							'<providerName>' + service[0][0].type + '</providerName>' + 
-							'<providerType>' + service[0][0].type + '</providerType>' 
-							+ '<providerAddress>' + service[0][0].host + ':' + service[0][0].port + '/</providerAddress>' 
-							+ '<consumerName>' + serviceType + '</consumerName>' 
-							+ '<consumerType>' + serviceType + '</consumerType>' 
-							+ '<consumerAddress>' + serviceType + '</consumerAddress>' 
-							+ '</translatorSetup>'; 
+							'<providerName>' + service[0].type + '</providerName>' + 
+							'<providerType>' + service[0].type + '</providerType>' + 
+							'<providerAddress>' + service[0].host + ':' + service[0].port + '/</providerAddress>' + 
+							'<consumerName>' + serviceType + '</consumerName>' + 
+							'<consumerType>' + serviceType + '</consumerType>' + 
+							'<consumerAddress>' + serviceType + '</consumerAddress>' + 
+							'</translatorSetup>'; 
 			//request translator to create interfaces
 			var postTranslator_options = {
-					uri: 'http://127.0.0.1:8000/translator/',
+					uri: 'http://' + config.translator.ip + ':' + config.translator.port + '/translator/',
 				    json: false, // Automatically parses the JSON string in the response
 				    headers: {'Content-Type': 'application/xml'},
 				    method: 'post',
 				    body: xmlbody//post message content {providername, providertype, provideraddress, consumername, consumertype, consumeraddress}
 			};
+			
 			return reqprom(postTranslator_options)
 			.then(function(response) {
 				console.log("actual:" + response);
 				respXML = new xmldoc.XmlDocument(response);
-			
-				console.log("actual respXML is " + respXML);
 				return respXML;
 			}).then(function(respXML) {
-				console.log("outside respXML is " + respXML);
 				//replace the address value with the end-point details returned from the translator
-				service[0][0].host = respXML.valueWithPath("ip");
-				service[0][0].port = respXML.valueWithPath("port");
-				service[0][0].type = serviceType;
+				service[0].host = respXML.valueWithPath("ip");
+				service[0].port = respXML.valueWithPath("port");
+				service[0].type = serviceType;
 			
 				return service;
 			});
 		}
 	});	
 	
-	waitfor = waitfor.then(function(service){//conditional logic tree with promise framework
-		console.log("final service" + service);
-		var path = service[0][0].properties.property.filter( function(property) { return property.name === "path" ? true : false; })[0].value;
+	//
+	waitfor = waitfor.map(function(service){//conditional logic tree with promise framework
+		console.log("final service" + JSON.stringify(service));
+		var path = service[0].properties.property.filter( function(property) { return property.name === "path" ? true : false; })[0].value;
 		serviceList.push({	
-			"name":		service[0][0].name,
-			"address":	service[0][0].host + ":" + service[0][0].port + path
+			"name":		service[0].name,
+			"address":	service[0].host + ":" + service[0].port + path
 		});
-	});									
-		//.then (check for missmatches between service interfaces and returned orchestration list)
-		//.then (engage translator to perform the requested translation).
+	});		
+	
+	//
 	waitfor = waitfor.finally(function() {
 			console.log({"target":targetSys, "services":serviceList});
 			res.setHeader('Content-Type','application/json');

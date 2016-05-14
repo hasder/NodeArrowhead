@@ -72,7 +72,7 @@ request({
 				  "port" : config.listen.port,
 				  "host" : config.listen.ip,
 				  "properties" : { "property" : [ { "name":"version", "value":"1.0" },
-				                                  { "name":"path", "value":"/orchestrationstore/" } ] }
+				                                  { "name":"path", "value":"/orchestrationstore/configuration/" } ] }
 			},
 			{
 				  "name" : "OrchestrationEngine",
