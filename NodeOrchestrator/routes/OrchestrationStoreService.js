@@ -28,6 +28,7 @@ var inJSON=[ {	target:'station-01',
 				name:'name-01',  
 				serialNumber:'serialNumber-01',  
 				lastUpdated:'lastUpdated-01', 
+				rules:["palletAvailable,_http", "processingComplete,_http" ] } ];
 
 var db = new taffy(inJSON);
 
