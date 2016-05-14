@@ -30,7 +30,7 @@ function getServiceResponse(name) {
 	} else {
 		return db().get();
 	}
-}
+};
 exports.service = function(req, res){
 	res.setHeader('Content-Type','application/json');
 	var responsePayload = getServiceResponse(req.params.name);
