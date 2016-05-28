@@ -24,11 +24,18 @@
 var taffy = require('taffydb').taffy;
 
 //var inJSON=[ {id:'station-01', expression:"service1:palletAvailable._coap._json, service2:processingComplete._coap._json"}, ];
-var inJSON=[ {	target:'station-01',
-				name:'name-01',  
-				serialNumber:'serialNumber-01',  
-				lastUpdated:'lastUpdated-01', 
-				rules:["palletAvailable,_http", "processingComplete,_http" ] } ];
+var inJSON=[
+            {
+            	"target":"station-01",
+				"name":"name-01",  
+				"serialNumber":"serialNumber-01",  
+				"lastUpdated":"lastUpdated-01", 
+				"rules":[
+				         "palletAvailable._http,station-01",
+				         "processingComplete._http,station-01" 
+				         ]
+            }
+           ];
 
 var db = new taffy(inJSON);
 

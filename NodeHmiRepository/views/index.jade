@@ -1,0 +1,20 @@
+extends layout
+
+block script
+	script(src='/scripts/arrowhead_requests.js')
+	
+block content
+	h1 Arrowhead service discovery viewer
+	p This application will display all services currently registered with the Arrowhead cloud 
+	button(onclick="getServiceList()") Refresh list!
+	#servicelist 
+	
+	p Script which will call service registry and populate a list of services published.
+	input#systemname(type="text", name="user")
+	button(onclick="getOrchestrationRules(systemname)") Refresh list!
+	#rulelist
+	
+	p Script which will call service registry and populate a list of services published.
+	button(onclick="getOrchestration(systemname)") Refresh list!
+	#orchestration
+	p thats it!!
