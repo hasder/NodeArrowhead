@@ -12,11 +12,29 @@ function servicerecord ( name, type, host, port, domain, properties )  {
 	this.host = host;
 	this.port = port;
 	this.domain = domain;
-	this.properties = properties
+	this.properties = properties;
 }
 
 
-var inJSON = [new servicerecord("palletAvailable", "_coap-json._udp", "[fdfd::ff]", "5683", "unknown", {"property":[{"name":"version","value":"1.0"},{"name":"path","value":"/palletAvailable"}]})]
+var inJSON = [
+              new servicerecord(
+            		  "default",
+            		  "_coap-json._udp",
+            		  "[fdfd::ff]", "5683",
+            		  "unknown",
+            		  {
+            			  "property":[
+            			              {
+            			            	  "name":"version",
+            			            	  "value":"1.0"
+    			            		  },
+    			            		  {
+    			            			  "name":"path",
+    			            			  "value":"/palletAvailable"
+    			            		  }
+    			            		 ]
+            		  })
+              ];
 
 var db = new taffy(inJSON);
 
@@ -30,7 +48,7 @@ function getServiceResponse(name) {
 	} else {
 		return db().get();
 	}
-};
+}
 exports.service = function(req, res){
 	res.setHeader('Content-Type','application/json');
 	var responsePayload = getServiceResponse(req.params.name);
@@ -83,8 +101,11 @@ var registerNewService = function (element) {
 				element.properties ));
 		
 
-	} else throw new Error("service name not provided");
-}
+	} else {
+		throw new Error("service name not provided");
+	
+	}
+};
 
 /*
  * POST publish new service
