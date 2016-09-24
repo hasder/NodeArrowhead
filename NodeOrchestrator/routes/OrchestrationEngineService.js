@@ -28,7 +28,7 @@ var 	reqprom = require("request-promise")
 
 
 
-exports.handleGet = function(req, res){
+exports.handleGet = function(req, res) {
 
 	var targetSys = req.params.target;
 	var serviceList = [];
@@ -36,7 +36,13 @@ exports.handleGet = function(req, res){
 
 	var serviceName = "";
 	var serviceType = "";
-		
+	var serviceAddress = req.ip;
+	if(serviceAddress.indexOf(":") > -1) {
+		serviceAddress = serviceAddress.substring(serviceAddress.lastIndexOf(":")+1);
+	}
+	
+	
+	console.log(serviceAddress);
 	
 	var getOrchestrationRules_options = {
 			uri: 'http://' + config.listen.ip + ':1102/orchestrationstore/configuration/' + targetSys,
@@ -64,9 +70,28 @@ exports.handleGet = function(req, res){
 		return reqprom(getService_options);
 	});
 	
+	
+	//select service provider from list
+	// criteria = 	meta data
+	//				QoS
+	//				security
+	
+	
+	
+	
 	//concurrent test for protocol mismatch and therefore translator engagement
 	waitfor = waitfor.map(function(service) {
-		if(service[0].type.toString() !== serviceType.toString()) {
+		service.forEach(function(entry) {
+			console.log("retrieved service name " + entry.name.toString());
+			console.log("retrieved service type " + entry.type.toString());
+			console.log("desired service type " + serviceType.toString());
+			console.log("match " + entry.type.toString().indexOf(serviceType.toString()));
+		});
+		console.log("retrieved service type " + service[0].type.toString());
+		console.log("desired service type " + serviceType.toString());
+		console.log("match " + service[0].type.toString().indexOf(serviceType.toString()));
+		
+		if(service[0].type.toString().indexOf(serviceType.toString()) === -1) {
 			//if the ip address does not contain a period and it does not have the square brackets for ipv6 then add them
 			if (service[0].host.indexOf('.') === -1 && service[0].host.indexOf('[') === -1) { 
 				service[0].host = '[' + service[0].host + ']';
@@ -78,7 +103,7 @@ exports.handleGet = function(req, res){
 							'<providerAddress>' + service[0].host + ':' + service[0].port + '/</providerAddress>' + 
 							'<consumerName>' + serviceType + '</consumerName>' + 
 							'<consumerType>' + serviceType + '</consumerType>' + 
-							'<consumerAddress>' + serviceType + '</consumerAddress>' + 
+							'<consumerAddress>' + serviceAddress + '</consumerAddress>' + 
 							'</translatorSetup>'; 
 			//request translator to create interfaces
 			var postTranslator_options = {
@@ -102,16 +127,19 @@ exports.handleGet = function(req, res){
 			
 				return service;
 			});
+		} else {
+			return service;
 		}
 	});	
 	
 	//
 	waitfor = waitfor.map(function(service){//conditional logic tree with promise framework
-		console.log("final service" + JSON.stringify(service));
+		console.log("final service " + JSON.stringify(service));
 		var path = service[0].properties.property.filter( function(property) { return property.name === "path" ? true : false; })[0].value;
+		path = (path[1]==='/'? path.substring(1) : path);
 		serviceList.push({	
 			"name":		service[0].name,
-			"address":	service[0].host + ":" + service[0].port + path
+			"address":	"http://" + service[0].host + ":" + service[0].port + path  //path.substring(1)
 		});
 	});		
 	
@@ -120,6 +148,118 @@ exports.handleGet = function(req, res){
 			console.log({"target":targetSys, "services":serviceList});
 			res.setHeader('Content-Type','application/json');
 			res.send({"target":targetSys, "services":serviceList});
+	});
+};
+
+exports.handleGetCoap = function(req, res) {
+	
+	//var targetSys = req.url.split('?')[1].split('=')[1];
+	var targetSys = req.url.split('/')[2];
+	console.log("targetSys: " + targetSys);
+	var serviceList = [];
+	var respXML = {};
+
+	var serviceName = "";
+	var serviceType = "";
+	var serviceAddress = req.rsinfo.address;
+	console.log("serviceAddress: " + serviceAddress);
+	if(serviceAddress.indexOf(":") > -1) {
+		serviceAddress = serviceAddress.substring(serviceAddress.lastIndexOf(":")+1);
+	}
+	
+	
+	console.log(serviceAddress);
+	
+	var getOrchestrationRules_options = {
+			uri: 'http://' + config.listen.ip + ':1102/orchestrationstore/configuration/' + targetSys,
+		    json: true // Automatically parses the JSON string in the response
+	};
+
+	//send request to Orchestration store to get the rules for the system
+	var waitfor = reqprom(getOrchestrationRules_options).then(function(response) {
+		console.log("response[0].rules: " + response[0].rules);
+		return response[0].rules;
+	});
+	
+	//concurrent sends to service registry to get the service instances according to the name in the rule
+	//todo: This will change once the rule definition becomes clear.
+	waitfor = waitfor.map(function(rule) {
+		
+		serviceName = rule.split(',')[0];
+		serviceType = rule.split(',')[1];
+		
+		console.log("serviceName: " + serviceName);
+		var getService_options = {
+				uri: 'http://' + config.serviceregistry.ip + ':' + config.serviceregistry.port + '/servicediscovery/service/' + serviceName,
+			    json: true // Automatically parses the JSON string in the response
+		};
+		console.log("service lookup at: " + getService_options.uri);
+		return reqprom(getService_options);
+	});
+	
+	//concurrent test for protocol mismatch and therefore translator engagement
+	waitfor = waitfor.map(function(service) {
+		console.log("retrieved service type " + service[0].type.toString());
+		console.log("desired service type " + serviceType.toString());
+		console.log("match " + service[0].type.toString().indexOf(serviceType.toString()));
+		if(service[0].type.toString().indexOf(serviceType.toString()) === -1) {
+			//if the ip address does not contain a period and it does not have the square brackets for ipv6 then add them
+			if (service[0].host.indexOf('.') === -1 && service[0].host.indexOf('[') === -1) { 
+				service[0].host = '[' + service[0].host + ']';
+			}
+			
+			var xmlbody = 	'<translatorSetup>' + 
+							'<providerName>' + service[0].type + '</providerName>' + 
+							'<providerType>' + service[0].type + '</providerType>' + 
+							'<providerAddress>' + service[0].host + ':' + service[0].port + '/</providerAddress>' + 
+							'<consumerName>' + serviceType + '</consumerName>' + 
+							'<consumerType>' + serviceType + '</consumerType>' + 
+							'<consumerAddress>' + serviceAddress + '</consumerAddress>' + 
+							'</translatorSetup>'; 
+			//request translator to create interfaces
+			var postTranslator_options = {
+					uri: 'http://' + config.translator.ip + ':' + config.translator.port + '/translator/',
+				    json: false, // Automatically parses the JSON string in the response
+				    headers: {'Content-Type': 'application/xml'},
+				    method: 'post',
+				    body: xmlbody//post message content {providername, providertype, provideraddress, consumername, consumertype, consumeraddress}
+			};
+			
+			return reqprom(postTranslator_options)
+			.then(function(response) {
+				console.log("actual:" + response);
+				respXML = new xmldoc.XmlDocument(response);
+				return respXML;
+			}).then(function(respXML) {
+				//replace the address value with the end-point details returned from the translator
+				service[0].host = respXML.valueWithPath("ip");
+				service[0].port = respXML.valueWithPath("port");
+				service[0].type = serviceType;
+			
+				return service;
+			});
+		} else {
+			return service;
+		}
+	});	
+	
+	//
+	waitfor = waitfor.map(function(service){//conditional logic tree with promise framework
+		console.log("final service " + JSON.stringify(service));
+		var path = service[0].properties.property.filter( function(property) { return property.name === "path" ? true : false; })[0].value;
+		path = (path[1]==='/'? path.substring(1) : path);
+		serviceList.push({	
+			"name":		service[0].name,
+			"address":	"http://" + service[0].host + ":" + service[0].port + path  //path.substring(1)
+		});
+	});		
+	
+	//
+	waitfor = waitfor.finally(function() {
+			console.log({"target":targetSys, "services":serviceList});
+			res.setOption('Content-Format','application/json');
+			var responsePayload = {"target":targetSys, "services":serviceList};
+			res.end(JSON.stringify(responsePayload));
 	});
 };
 

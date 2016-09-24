@@ -26,6 +26,7 @@
 var config = {};
 config.serviceregistry = {};
 config.listen = {};
+config.translator = {};
 
 //config.serviceregistry.ip		= "[FDFD:55::80FE]";
 config.serviceregistry.ip		= "127.0.0.1";

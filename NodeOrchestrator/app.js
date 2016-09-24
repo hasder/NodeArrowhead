@@ -31,6 +31,7 @@ var express = require('express')
   , orchestrationengine = require('./routes/OrchestrationEngineService')
 //  , orchestrationmanager = require('./routes/OrchestrationManagerService')
   , http = require('http')
+  , coap = require('coap')
   , path = require('path')
   , config = require('./config');
 
@@ -119,3 +120,36 @@ app.get('/orchestrationengine/:target', orchestrationengine.handleGet);
 http.createServer(app).listen(app.get('port'), function(){
   console.log('Express server listening on port ' + app.get('port'));
 });
+
+
+var server = coap.createServer();
+
+
+server.on('request', function(req, res) {
+	console.log('received request req:' + req.method + " payload     " + req.payload);
+	
+	var usage_err = null;
+	var urlsegments = req.url.split('/');
+	if(urlsegments[1] === "orchestrationengine") {
+		if(req.method === "GET") {
+			orchestrationengine.handleGetCoap(req, res);
+
+		} else {
+			usage_err = true;
+		}
+	}  else {
+		usage_err = true;
+	}
+	
+	if(usage_err) {
+		res.end('wrong usage');
+	}
+});
+
+server.listen(9684, "FDFD:55::80FF", function() {
+//server.listen(9684, "127.0.0.1", function() {
+  console.log('server started ' + server._port);
+});
+
+
+

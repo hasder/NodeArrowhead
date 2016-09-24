@@ -2,41 +2,125 @@
 var taffy = require('taffydb').taffy;
 //var localStorage = require('localStorage');
 
-var servicedb = [];
 
 
 
-function servicerecord ( name, type, host, port, domain, properties )  {
+function servicerecord ( name, type, host, port, domain, properties, timestampInSeconds )  {
 	this.name = name;
 	this.type = type;
 	this.host = host;
 	this.port = port;
 	this.domain = domain;
 	this.properties = properties;
+	this._timestamp = timestampInSeconds;
 }
 
 
 var inJSON = [
-              new servicerecord(
-            		  "default",
-            		  "_coap-json._udp",
-            		  "[fdfd::ff]", "5683",
-            		  "unknown",
-            		  {
-            			  "property":[
-            			              {
-            			            	  "name":"version",
-            			            	  "value":"1.0"
-    			            		  },
-    			            		  {
-    			            			  "name":"path",
-    			            			  "value":"/palletAvailable"
-    			            		  }
-    			            		 ]
-            		  })
-              ];
+				new servicerecord(
+					"palletAvailable-827635ef",
+					"palletAvailable._coap-json._udp",
+					"[fdfd::ff]", "5683",
+					"unknown",
+					{
+						"property":[
+							{
+								"name":"version",
+								"value":"1.0"
+							},
+							{
+								"name":"path",
+								"value":"/palletAvailable",
+								"loc":"Station-01"
+							}
+						]
+					},
+					Math.floor(new Date().getTime() / 1000)
+				),
+				new servicerecord(
+					"processingComplete-827635ef",
+					"processingComplete._coap-json._udp",
+					"[fdfd::ff]", "5683",
+					"unknown",
+					{
+						"property":[
+							{
+								"name":"version",
+								"value":"1.0"
+							},
+							{
+								"name":"path",
+								"value":"/processingComplete",
+								"loc":"Station-01"
+							}
+						]
+					},
+					Math.floor(new Date().getTime() / 1000)
+				),
+				new servicerecord(
+				    "conveyorOperation-sim01",
+				    "conveyorOperation._coap._udp",
+				    "[fdfd::a12f:783e:3b79:3630]",
+				    "5683",
+				    "unknown",
+				    {
+				      "property": [
+				        {
+				          "name": "path",
+				          "value": "/conveyorOperation"
+				        },
+				        {
+				          "name": "version",
+				          "value": "1.0"
+				        }
+				      ]
+				    },
+					Math.floor(new Date().getTime() / 1000)				  
+				),
+				new servicerecord(
+					    "conveyorOperation-sim02",
+					    "conveyorOperation._coap._udp",
+					    "[fdfd::a12f:783e:3b79:3630]",
+					    "5683",
+					    "unknown",
+					    {
+					      "property": [
+					        {
+					          "name": "path",
+					          "value": "/conveyorOperation"
+					        },
+					        {
+					          "name": "version",
+					          "value": "1.0"
+					        }
+					      ]
+					    },
+						Math.floor(new Date().getTime() / 1000)				  
+					)
+          ];
 
 var db = new taffy(inJSON);
+
+
+
+
+
+
+var serviceWatchdog = setInterval(function () {
+	var timenow = Math.floor(new Date().getTime() / 1000);
+	getServiceResponse().forEach(
+			function(item) {
+				if ((timenow - item._timestamp) > 300) { //make this a 5 minute timeout
+					deregisterService(item);
+				}
+			});
+}, 10000); //check every 10 seconds
+
+
+
+
+
+
 
 
 /*
@@ -67,7 +151,9 @@ exports.service_coap = function(req, res){
  */
 function getTypeResponse(type) {
 	if(type) {
-		return db().filter({type:{like:type}}).get();
+		var temp = db().filter({type:{like:type}}).get();
+		//for (var key in temp){ if(key. delete customer[key];}
+		return temp;
 	} else {
 		return db().distinct("type");
 	}
@@ -76,11 +162,6 @@ exports.type = function(req, res){
 	res.setHeader('Content-Type','application/json');
 	var responsePayload = getTypeResponse(req.params.type);
 	res.send(responsePayload);
-//	if(req.params.type) {
-//		res.send(db().filter({type:{like:req.params.type}}).get());
-//	} else {
-//		res.send(db().distinct("type"));
-//	}
 };
 exports.type_coap = function(req, res){
 	res.setOption('Content-Format','application/json');
@@ -88,6 +169,13 @@ exports.type_coap = function(req, res){
 	res.end(JSON.stringify(responsePayload));
 };
 
+
+
+
+
+/*
+ * publish new service methods
+ */
 var registerNewService = function (element) {
 	if(element.name) {
 		db({name:element.name}).remove();
@@ -98,7 +186,8 @@ var registerNewService = function (element) {
 				element.host, 
 				element.port, 
 				element.domain,
-				element.properties ));
+				element.properties,
+				Math.floor(new Date().getTime() / 1000)));
 		
 
 	} else {
@@ -106,13 +195,12 @@ var registerNewService = function (element) {
 	
 	}
 };
-
 /*
  * POST publish new service
  */
 exports.publish = function(req, res){
 	try {
-		req.body.forEach(registerNewService);
+		registerNewService(req.body);
 
 		res.send("ok");
 		
@@ -127,7 +215,8 @@ exports.publish_coap = function(req, res){
 	try {
 
 		var payload = JSON.parse(req.payload);
-		payload.forEach(registerNewService);
+		//payload.forEach(registerNewService);
+		registerNewService(payload);
 		
 //		if(payload.name) {
 //			db({name:payload.name}).remove();
@@ -149,16 +238,22 @@ exports.publish_coap = function(req, res){
 };
 
 /*
- * POST publish new service
+ * un-publish new service methods
  */
+/*
+ * POST un-publish service
+ */
+var deregisterService = function (service)  {
+	db(service).remove();
+};
 exports.unpublish = function(req, res){
-	db({name:req.body.name}).remove();
+	deregisterService({name:req.body.name});
 	res.send("ok");
 };
 exports.unpublish_coap = function(req, res){
 	try {
 		var payload = JSON.parse(req.payload);
-		db({name:payload.name}).remove();
+		deregisterService({name:payload.name});//db({name:payload.name}).remove();
 		res.end("ok");
 	} catch (e) {
 		console.log('exception when parsing body');
