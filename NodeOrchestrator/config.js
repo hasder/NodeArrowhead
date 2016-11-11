@@ -28,7 +28,7 @@ config.serviceregistry = {};
 config.listen = {};
 config.translator = {};
 
-//config.serviceregistry.ip		= "[FDFD:55::80FE]";
+//config.serviceregistry.ip		= "[FDFD::FF]";
 config.serviceregistry.ip		= "127.0.0.1";
 config.serviceregistry.port		= "1100";
 
@@ -36,7 +36,7 @@ config.serviceregistry.port		= "1100";
 config.listen.ip				= "127.0.0.1";
 config.listen.port				= "1102";
 
-//config.translator.ip			= "[FDFD:55::80FE]";
+//config.translator.ip			= "[FDFD::FF]";
 config.translator.ip			= "127.0.0.1";
 config.translator.port			= "8000";
 

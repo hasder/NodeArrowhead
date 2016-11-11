@@ -67,22 +67,23 @@ var request = require("request");
 request({
 		uri: "http://" + config.serviceregistry.ip + ":" + config.serviceregistry.port + "/servicediscovery/publish",
 		method: "POST",
-		json: [{
+		json: //[{
+				{
 				  "name" : "OrchestrationStore",
-				  "type" : "_orchestrationstore-_json-_http._tcp",
+				  "type" : "_orchestrationstore._json._http._tcp",
 				  "port" : config.listen.port,
 				  "host" : config.listen.ip,
 				  "properties" : { "property" : [ { "name":"version", "value":"1.0" },
 				                                  { "name":"path", "value":"/orchestrationstore/configuration/" } ] }
-			},
-			{
-				  "name" : "OrchestrationEngine",
-				  "type" : "_orchestrationengine-_json-_http._tcp",
-				  "port" : config.listen.port,
-				  "host" : config.listen.ip,
-				  "properties" : { "property" : [ { "name":"version", "value":"1.0" },
-				                                  { "name":"path", "value":"/orchestrationengine/" } ] }
-			}]
+			}
+			//{
+			//	  "name" : "OrchestrationEngine",
+//	  "type" : "_orchestrationengine-_json-_http._tcp",
+//			  "port" : config.listen.port,
+//			  "host" : config.listen.ip,
+//			  "properties" : { "property" : [ { "name":"version", "value":"1.0" },
+//			                                  { "name":"path", "value":"/orchestrationengine/" } ] }
+//		}]
 	}, function(error, response, body) {
 		console.log(body);
 	});
@@ -95,21 +96,21 @@ app.post('/orchestrationstore/configuration/delete', orchestrationstore.deleteEx
 
 
 //orchestrationengine service
-//var request = require("request");
-//request({
-//		uri: "http://" + config.serviceregistry.ip + ":" + config.serviceregistry.port + "/servicediscovery/publish",
-//		method: "POST",
-//		json: {
-//				  "name" : "OrchestrationEngine",
-//				  "type" : "_orchestrationengine-_json-_http._tcp",
-//				  "port" : config.listen.port,
-//				  "host" : config.listen.ip,
-//				  "properties" : { "property" : [ { "name":"version", "value":"1.0" },
-//				                                  { "name":"path", "value":"/orchestrationengine/" } ] }
-//			}
-//	}, function(error, response, body) {
-//		console.log(body);
-//	});
+var request2 = require("request");
+request2({
+		uri: "http://" + config.serviceregistry.ip + ":" + config.serviceregistry.port + "/servicediscovery/publish",
+		method: "POST",
+		json: {
+				  "name" : "OrchestrationEngine",
+				  "type" : "_orchestrationengine._json._http._tcp",
+				  "port" : config.listen.port,
+				  "host" : config.listen.ip,
+				  "properties" : { "property" : [ { "name":"version", "value":"1.0" },
+				                                  { "name":"path", "value":"/orchestrationengine/" } ] }
+			}
+	}, function(error, response, body) {
+		console.log(body);
+	});
 
 //---------------------------------------------------------------------------
 //app.get('/orchestrationengine/*', orchestrationengine.lookupOrchestrationStore, orchestrationengine.lookupServiceRegistry, orchestrationengine.matchServiceContract, orchestrationengine.sendResponse);
@@ -146,8 +147,8 @@ server.on('request', function(req, res) {
 	}
 });
 
-server.listen(9684, "FDFD:55::80FF", function() {
-//server.listen(9684, "127.0.0.1", function() {
+//server.listen(9684, "FDFD:55::80FF", function() {
+server.listen(9684, "127.0.0.1", function() {
   console.log('server started ' + server._port);
 });
 

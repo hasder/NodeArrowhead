@@ -26,13 +26,40 @@ var taffy = require('taffydb').taffy;
 //var inJSON=[ {id:'station-01', expression:"service1:palletAvailable._coap._json, service2:processingComplete._coap._json"}, ];
 var inJSON=[
             {
-            	"target":"station-01",
-				"name":"name-01",  
-				"serialNumber":"serialNumber-01",  
-				"lastUpdated":"lastUpdated-01", 
+            	"target":"ua-demo",
+				"name":"HasanDerhamy",  
+				"serialNumber":"EISLAB-A2301",  
+				"lastUpdated":"22-10-2016", 
 				"rules":[
-				         "palletAvailable,_coap,station-01",
-				         "processingComplete,_coap,station-01" 
+				         "ua-sim,_coap"
+				         //"processingComplete,_coap,station-01" 
+				         ]
+            },
+            {
+            	"target":"tech-01",
+				"name":"HasanDerhamy",  
+				"serialNumber":"EISLAB-A2301",  
+				"lastUpdated":"03-10-2016", 
+				"rules":[
+				         "palletAvailable-657f41ae,_http",
+				         "palletAvailable-23df9421,_http",
+				         "palletAvailable-1fb9475b,_http",
+				         "palletAvailable-92e425f7,_http",
+				         "processingComplete-657f41ae,_http",
+				         "processingComplete-23df9421,_http",
+				         "processingComplete-1fb9475b,_http",
+				         "processingComplete-92e425f7,_http",
+				         //"processingComplete,_coap,station-01" 
+				         ]
+            },
+            {
+            	"target":"target-01",
+				"name":"ranging",  
+				"serialNumber":"EISLAB-T1.9",  
+				"lastUpdated":"17-10-2016", 
+				"rules":[
+				         "position,_http",
+				         //"processingComplete,_coap,station-01" 
 				         ]
             },
             {
