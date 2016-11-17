@@ -24,7 +24,15 @@
 var taffy = require('taffydb').taffy;
 
 //var inJSON=[ {id:'station-01', expression:"service1:palletAvailable._coap._json, service2:processingComplete._coap._json"}, ];
-var inJSON=[
+var inJSON=[ {
+				"target":"alfa-gui-01",
+				"name":"alfacar",  
+				"serialNumber":"EISLAB-A001",  
+				"lastUpdated":"17-11-2016", 
+				"rules":[
+					     "vehicleData-alfa1,_http"
+						 ]
+			},
             {
             	"target":"ua-demo",
 				"name":"HasanDerhamy",  

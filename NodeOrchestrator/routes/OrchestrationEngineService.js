@@ -37,11 +37,15 @@ exports.handleGet = function(req, res) {
 	var serviceName = "";
 	var serviceType = "";
 	var consumerScheme = "";
-	var serviceAddress = req.ip;
+	var serviceAddress = req.connection.remoteAddress;
 	console.log("serviceAddress: " + serviceAddress);
 	
 	if ((serviceAddress.indexOf("[") < 0) && (serviceAddress.indexOf(":") > -1)) {
-		serviceAddress = serviceAddress.substring( serviceAddress.lastIndexOf(":")+1 );
+		if (serviceAddress.indexOf("::") > -1) {
+			
+		} else {
+			serviceAddress = serviceAddress.substring( serviceAddress.lastIndexOf(":")+1 );
+		}
 	}
 	
 	
@@ -94,6 +98,7 @@ exports.handleGet = function(req, res) {
 		if(service[0].hasOwnProperty("type")) {
 			console.log("retrieved service type " + service[0].type.toString());
 			console.log("desired service type " + serviceType.toString());
+			consumerScheme = serviceType.replace("_","");
 			console.log("match " + service[0].type.toString().indexOf(serviceType.toString()));
 			if(service[0].type.toString().indexOf(serviceType.toString()) === -1) {
 				//if the ip address does not contain a period and it does not have the square brackets for ipv6 then add them
@@ -104,13 +109,12 @@ exports.handleGet = function(req, res) {
 				var xmlbody = 	'<translatorSetup>' + 
 								'<providerName>' + service[0].type + '</providerName>' + 
 								'<providerType>' + service[0].type + '</providerType>' + 
-								'<providerAddress>' + service[0].host + ':' + service[0].port + '/</providerAddress>' + 
+								'<providerAddress>' + service[0].host + ':' + service[0].port + '</providerAddress>' + 
 								'<consumerName>' + serviceType + '</consumerName>' + 
 								'<consumerType>' + serviceType + '</consumerType>' + 
 								'<consumerAddress>' + serviceAddress + '</consumerAddress>' + 
 								'</translatorSetup>'; 
 				console.log("xmlbody " + xmlbody);
-				consumerScheme = serviceType.replace("_","");
 				//request translator to create interfaces
 				var postTranslator_options = {
 						uri: 'http://' + config.translator.ip + ':' + config.translator.port + '/translator/',
@@ -147,10 +151,18 @@ exports.handleGet = function(req, res) {
 		console.log("final service " + JSON.stringify(service));
 		if(service !== null) {
 			var path = service[0].properties.property.filter( function(property) { return property.name === "path" ? true : false; })[0].value;
-			path = (path[1]==='/'? path.substring(1) : path);
+			if(path.startsWith("/")) {
+				path = (path[1]==='/'? path.substring(1) : path);
+			} else {
+				path = "/" + path;
+			}
+			if(service[0].port.endsWith("/")) {
+				service[0].port = service[0].port.substring(0,service[0].port.length-1);
+			}
+			
 			serviceList.push({	
 				"name":		service[0].name,
-				"address":	"http://" + service[0].host + ":" + service[0].port + path  //path.substring(1)
+				"address":	consumerScheme + "://" + service[0].host + ":" + service[0].port + path  //path.substring(1)
 			});
 		}
 	});		
@@ -214,6 +226,7 @@ exports.handleGetCoap = function(req, res) {
 	waitfor = waitfor.map(function(service) {
 		console.log("retrieved service type " + service[0].type.toString());
 		console.log("desired service type " + serviceType.toString());
+		consumerScheme = serviceType.replace("_","");
 		console.log("match " + service[0].type.toString().indexOf(serviceType.toString()));
 		if(service[0].type.toString().indexOf(serviceType.toString()) === -1) {
 			//if the ip address does not contain a period and it does not have the square brackets for ipv6 then add them
@@ -224,12 +237,11 @@ exports.handleGetCoap = function(req, res) {
 			var xmlbody = 	'<translatorSetup>' + 
 							'<providerName>' + service[0].type + '</providerName>' + 
 							'<providerType>' + service[0].type + '</providerType>' + 
-							'<providerAddress>' + service[0].host + ':' + service[0].port + '/</providerAddress>' + 
+							'<providerAddress>' + service[0].host + ':' + service[0].port + '</providerAddress>' + 
 							'<consumerName>' + serviceType + '</consumerName>' + 
 							'<consumerType>' + serviceType + '</consumerType>' + 
 							'<consumerAddress>' + serviceAddress + '</consumerAddress>' + 
 							'</translatorSetup>'; 
-			consumerScheme = serviceType.replace("_","");
 			//request translator to create interfaces
 			console.log("xmlbody " + xmlbody);
 			var postTranslator_options = {
@@ -262,7 +274,11 @@ exports.handleGetCoap = function(req, res) {
 	waitfor = waitfor.map(function(service){//conditional logic tree with promise framework
 		console.log("final service " + JSON.stringify(service));
 		var path = service[0].properties.property.filter( function(property) { return property.name === "path" ? true : false; })[0].value;
-		path = (path[1]==='/'? path.substring(1) : path);
+		if(path.startsWith("/")) {
+			path = (path[1]==='/'? path.substring(1) : path);
+		} else {
+			path = "/" + path;
+		}
 		serviceList.push({	
 			"name":		service[0].name,
 			"address":	consumerScheme + "://" + service[0].host + ":" + service[0].port + path  //path.substring(1)
