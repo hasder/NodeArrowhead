@@ -24,7 +24,47 @@
 var taffy = require('taffydb').taffy;
 
 //var inJSON=[ {id:'station-01', expression:"service1:palletAvailable._coap._json, service2:processingComplete._coap._json"}, ];
-var inJSON=[ {
+var inJSON=[{
+            	"target":"station-06",
+				"name":"HasanDerhamy",  
+				"serialNumber":"EISLAB-A2301",  
+				"lastUpdated":"03-10-2016", 
+				"rules":[
+				         "palletAvailable-23df9421,_http",
+				         "processingComplete-23df9421,_http", 
+				         ]
+            },
+            {
+            	"target":"station-04",
+				"name":"HasanDerhamy",  
+				"serialNumber":"EISLAB-A2301",  
+				"lastUpdated":"03-10-2016", 
+				"rules":[
+				         "palletAvailable-657f41ae,_http",
+				         "processingComplete-657f41ae,_http",
+				         ]
+            },
+            {
+            	"target":"station-02",
+				"name":"HasanDerhamy",  
+				"serialNumber":"EISLAB-A2301",  
+				"lastUpdated":"03-10-2016", 
+				"rules":[
+				         "palletAvailable-1fb9475b,_http",
+				         "processingComplete-1fb9475b,_http", 
+				         ]
+            },
+            {
+            	"target":"station-01",
+				"name":"HasanDerhamy",  
+				"serialNumber":"EISLAB-A2301",  
+				"lastUpdated":"03-10-2016", 
+				"rules":[
+				         "palletAvailable-92e425f7,_http",
+				         "processingComplete-92e425f7,_http",
+				         ]
+            },
+            {
 				"target":"alfa-gui-01",
 				"name":"alfacar",  
 				"serialNumber":"EISLAB-A001",  

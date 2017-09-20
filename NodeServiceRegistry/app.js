@@ -30,6 +30,7 @@ var express = require('express')
   , http = require('http')
   , path = require('path')
   , coap = require('coap')
+  , mqtt = require('mqtt')
   , config = require('./config');
   //, server_ipv6 = coap.createServer({ type:'udp6' });
 
@@ -73,6 +74,37 @@ http.createServer(app).listen(app.get('port'), function(){
   console.log('Express server listening on port ' + app.get('port'));
 });
 
+
+var settings = {
+	    clientId: "laptop-A8076",
+	    keepalive: 1,
+	    clean: false,
+	    reconnectPeriod: 1000 * 1
+	};
+
+var client = mqtt.connect('mqtt://192.168.0.111', settings);
+//var client = mqtt.connect('mqtt://127.0.0.1');
+
+client.on('connect', function () {
+	client.subscribe('$ah/registry/service');
+});
+
+client.on('message', function (topic, message) {
+	console.log('topic = ' + topic.toString());
+	console.log(message.toString());
+	if(topic === '$ah/registry/service') {
+		serviceregistry.publish_mqtt(JSON.parse(message.toString()));
+		console.log('registered');
+	}
+});
+
+client.on('error', function (error) {
+	console.log("Error: " + error);
+});
+
+client.on('close', function () {
+	console.log("connection closed");
+});
 
 var server = coap.createServer();
 //server.on('get', function(req, res) {

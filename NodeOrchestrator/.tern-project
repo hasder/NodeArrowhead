@@ -1,1 +1,14 @@
-{"plugins":{"outline":{},"node":{}},"libs":["ecma5","ecma6"],"ide":{}}
+{
+  "plugins": {
+    "outline": {
+      
+    },
+    "node": {
+      
+    }
+  },
+  "libs": [
+    "ecma5",
+    "ecma6"
+  ]
+}

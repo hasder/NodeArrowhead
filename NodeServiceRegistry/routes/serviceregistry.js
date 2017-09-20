@@ -211,6 +211,15 @@ exports.publish = function(req, res){
 	}
 	
 };
+exports.publish_mqtt = function(message){
+	try {
+
+		registerNewService(message);
+	} catch (error) {
+		console.log('exception when parsing body = ' + error);
+	}
+};
+
 exports.publish_coap = function(req, res){
 	try {
 
