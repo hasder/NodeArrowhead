@@ -137,7 +137,7 @@ server.on('request', function(req, res) {
 		} else {
 			usage_err = true;
 		}
-	} else if(urlsegments[1] === "orchestrationengine") {
+	} else if(urlsegments[1] === "orchestrationstore") {
 		if(req.method === "GET") {
 			orchestrationstore.handleGetCoap(req, res);
 		} else {

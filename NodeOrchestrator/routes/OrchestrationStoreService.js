@@ -316,9 +316,10 @@ exports.handleGetCoap = function(req, res) {
 	res.setHeader('Content-Type','application/json');
 	var responsePayload = null;
 	var targetSys = req.url.split('/')[3];
+	console.log(req.url);
+	console.log(targetSys);
 	
-	
-	if(req.params.target) {
+	if(targetSys) {
 		responsePayload = db().filter({target:{like:targetSys}}).get();
 	} else {
 		res.setHeader('Content-Type','text');
