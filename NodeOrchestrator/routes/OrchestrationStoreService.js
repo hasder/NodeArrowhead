@@ -260,6 +260,8 @@ exports.postExpression = function(req, res){
 	
 	res.send("created/updated orchestration expression record");
 };
+
+
 exports.publish = function(req, res){
 	try {
 		if(req.body.target) {
@@ -308,3 +310,25 @@ exports.deleteExpression = function(req,res){
 	}
 	
 };
+
+
+exports.handleGetCoap = function(req, res) {
+	res.setHeader('Content-Type','application/json');
+	var responsePayload = null;
+	var targetSys = req.url.split('/')[3];
+	
+	
+	if(req.params.target) {
+		responsePayload = db().filter({target:{like:targetSys}}).get();
+	} else {
+		res.setHeader('Content-Type','text');
+		responsePayload = "ERROR: Target not specified";//TODO:set error code
+		res.status(400);
+	}
+
+	res.end(JSON.stringify(responsePayload));
+};
+
+
+
+

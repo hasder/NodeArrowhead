@@ -134,11 +134,16 @@ server.on('request', function(req, res) {
 	if(urlsegments[1] === "orchestrationengine") {
 		if(req.method === "GET") {
 			orchestrationengine.handleGetCoap(req, res);
-
 		} else {
 			usage_err = true;
 		}
-	}  else {
+	} else if(urlsegments[1] === "orchestrationengine") {
+		if(req.method === "GET") {
+			orchestrationstore.handleGetCoap(req, res);
+		} else {
+			usage_err = true;
+		}
+	} else {
 		usage_err = true;
 	}
 	
